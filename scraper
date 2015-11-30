@@ -19,6 +19,7 @@ pg.connect(process.env.DATABASE_URL, function(err, client) {
 
     console.log(result.rows);
     var scraperFunction = function(teamAbbrev, subscriberEmail) {
+      //formats the network info into a readable format
         var networkFormatting = function(input) {
             var firstNetworkArray = input.replace(/\n/g, ";").split(";")
             finalNetworkArray = []
@@ -62,7 +63,7 @@ pg.connect(process.env.DATABASE_URL, function(err, client) {
             var teams = "";
             var network = "";
             var timeEst = "";
-            // pulls dates and teamsand tv schedule from nhl schedule website
+            // pulls dates and teams and tv schedule from nhl schedule website
             dates = window.$(".skedStartDateSite").text();
             teams = window.$(".teamName").text();
             network = window.$(".tvInfo").text();
@@ -123,7 +124,7 @@ pg.connect(process.env.DATABASE_URL, function(err, client) {
 
           });
       }
-      //scraperFunction("COL","kjolibois@live.com")
+    
     var databaseScraper = function(input) {
       for (var i = 0; i < input.length; i++) {
         scraperFunction(input[i].teamname, input[i].email)
