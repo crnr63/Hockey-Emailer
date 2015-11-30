@@ -1,2 +1,2 @@
 # panthers-emailer
-Node app to send myself an email letting me know if there is a florida panthers' game on that night. 
+Web Application built using Angular, Node JS, Express JS and PostgreSQL through Heroku.  
