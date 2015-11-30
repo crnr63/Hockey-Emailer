@@ -25,14 +25,12 @@ app.get('/', function(request, response) {
 app.get('/scomplete', function(request, response) {
   response.render('pages/complete');
 });
-app.get('/error', function(request, response) {
-  response.render('pages/error');
-});
+
 app.post('/form', function(req, res) {
   var input = req.body;
 
   res.send(console.log(input));
-
+//insert form data into database
   pg.connect(process.env.DATABASE_URL, function(err, client) {
     client.query("CREATE TABLE IF NOT EXISTS applist(email varchar(64), teamname varchar(64))");
     client.query("INSERT INTO applist(email, teamname) values($1, $2)", [input[0], input[1]]);
