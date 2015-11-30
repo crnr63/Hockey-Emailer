@@ -105,13 +105,14 @@
     $scope.list = [];
 
     $scope.submit = function() {
-
+//making sure that a team has been selected and that an email has been entered
       if ($scope.options.selectedOption != null && $scope.email.text != "me@example.com") {
 
         $scope.list.push([$scope.email.text, $scope.options.selectedOption.id]);
         $scope.text = '';
         var data = $scope.list;
-        $http.post('/post', data, config).then(successCallback, errorCallback);
+        //post the form data to express/node then switch to seperate page to let user know their request has complteted 
+        $http.post('/post', data, config).then(function(){ window.location="/scomplete";});
       }
     };
 
