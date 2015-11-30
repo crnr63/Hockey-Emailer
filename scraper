@@ -1,0 +1,137 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var jsdom = require('jsdom');
+var sendgrid = require('sendgrid')(
+  process.env.SENDGRID_USERNAME,
+  process.env.SENDGRID_PASSWORD
+);
+var pg = require('pg');
+
+pg.connect(process.env.DATABASE_URL, function(err, client) {
+
+  var query = client.query("SELECT * FROM applist");
+  query.on("row", function(row, result) {
+    result.addRow(row);
+
+  });
+  query.on("end", function(result) {
+
+    console.log(result.rows);
+    var scraperFunction = function(teamAbbrev, subscriberEmail) {
+        var networkFormatting = function(input) {
+            var firstNetworkArray = input.replace(/\n/g, ";").split(";")
+            finalNetworkArray = []
+            for (var i = 1; i < firstNetworkArray.length; i += 2) {
+              finalNetworkArray.push(firstNetworkArray[i]);
+            }
+            return finalNetworkArray
+          }
+          //splits the time into separate arrays. 
+        var timeFormatting = function(input) {
+            var newTime = input.replace(/ET/g, "ET-")
+            return newTime.split("-");
+          }
+          //modifies the dates so that they are easier to split
+        var dateFormatting = function(input) {
+            var newDates = input.replace(/2015/g, "2015-").replace(/2016/g, "2016-").replace(/,/g, "");
+            return newDates.split("-");
+          }
+          //formatting the  team info pulled from website
+        var teamFormatting = function(input) {
+            var teamString = input.toString().replace(/([a-z])([A-Z])/g, '$1 $2').replace(/Tampa /g, "Tampa-").replace(/New /g, "New-").replace(/St. /g, "St.").replace(/NY /g, "NY-").replace(/San /g, "San-").replace(/Los /g, "Los-");
+
+            return teamString.split(" ");
+          }
+          //calculates the index for the year in the new date object so I can  format it to match the dates pulled from the website.
+        var indexCalc = function(string) {
+
+          if (string.indexOf("2015") > string.indexOf("2016")) {
+            return string.indexOf("2015");
+          } else {
+            return string.indexOf("2016");
+          }
+
+        };
+        var scraperUrl =
+          "http://www.nhl.com/ice/schedulebyseason.htm?team=" + teamAbbrev;
+        jsdom.env(
+          scraperUrl, ["http://code.jquery.com/jquery.js"],
+          function(err, window) {
+            var dates = "";
+            var teams = "";
+            var network = "";
+            var timeEst = "";
+            // pulls dates and teamsand tv schedule from nhl schedule website
+            dates = window.$(".skedStartDateSite").text();
+            teams = window.$(".teamName").text();
+            network = window.$(".tvInfo").text();
+            timeEST = window.$(".skedStartTimeEST").text();
+            //modifies the dates so that they are easier to split
+            var timeArray = timeFormatting(timeEST);
+            var datesArray = dateFormatting(dates);
+            var networkArray = networkFormatting(network)
+              //creates new date for comparison and formats it to match info pulled from site
+            var now = new Date();
+            var dateString = now.toString().split(" ");
+            //calculates the index so that I can cut off the string after the year
+
+            var index = indexCalc(dateString);
+            var tempArray = [];
+            for (var i = 0; i < index + 1; i++) {
+              tempArray.push(dateString[i]);
+            }
+            var todaysDate = tempArray.join(" ");
+
+            var teamArray = teamFormatting(teams)
+            var gamesOpponents = [];
+            var length = teamArray.length;
+            var i = 0;
+            //organizes teams by game
+            for (var i = 0; i < 82; i += 2) {
+              if (datesArray[i] == todaysDate) {
+                gamesOpponents.push([teamArray[i], teamArray[i + 1]]);
+                break;
+              }
+            }
+
+            var emailSubject = "";
+
+            //uses indexof to determine if there is going to be a game on the current date.
+            if (datesArray.indexOf(todaysDate) > -1) {
+              var finderIndex = datesArray.indexOf(todaysDate);
+              console.log(finderIndex),
+                emailSubject = "Tonight, it's going to be " + gamesOpponents[finderIndex][0] + " vs " + gamesOpponents[finderIndex][1] + " on " + networkArray[finderIndex] + " at " +
+                timeArray[finderIndex]
+            } else(emailSubject = "No Game Tonight");
+            console.log(emailSubject);
+            //changes subject line of email depending on if there is a game or not
+            if (datesArray.indexOf(todaysDate) > -1) {
+              subjectLine = "There's a Game Tonight"
+            } else(subjectLine = "No Game Tonight");
+            console.log(emailSubject);
+
+            //use sendgrid to send the email.
+            var email = new sendgrid.Email();
+
+            email.addTo(subscriberEmail);
+            email.setFrom("jlibokapps@gmail.com");
+            email.setSubject(subjectLine);
+            email.setHtml('<b>' + emailSubject + '</b>');
+
+            sendgrid.send(email);
+
+          });
+      }
+      //scraperFunction("COL","kjolibois@live.com")
+    var databaseScraper = function(input) {
+      for (var i = 0; i < input.length; i++) {
+        scraperFunction(input[i].teamname, input[i].email)
+      }
+    }
+
+    databaseScraper(result.rows)
+
+    client.end();
+  });
+});

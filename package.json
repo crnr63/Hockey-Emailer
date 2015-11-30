@@ -1,0 +1,29 @@
+{
+  "name": "panthers-emailer",
+  "version": "1.0.0",
+  "description": "Node app to send myself an email letting me know if there is a florida panthers' game on that night.",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "ejs": "^2.3.4",
+    "express": "^4.13.3",
+    "jsdom": "^7.1.0",
+    "nodemailer": "^1.10.0",
+    "pg": "^4.4.3",
+    "sendgrid": "^2.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlibok/panthers-emailer.git"
+  },
+  "author": "KJ",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jlibok/panthers-emailer/issues"
+  },
+  "homepage": "https://github.com/jlibok/panthers-emailer#readme"
+}
